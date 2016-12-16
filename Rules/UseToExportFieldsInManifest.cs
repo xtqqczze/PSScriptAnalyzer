@@ -27,8 +27,8 @@ using System.Globalization;
 namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
 {
     /// <summary>
-    /// UseToExportFieldsInManifest: Checks if AliasToExport, CmdletsToExport, FunctionsToExport and VariablesToExport 
-    /// fields do not use wildcards and $null in their entries. 
+    /// UseToExportFieldsInManifest: Checks if AliasToExport, CmdletsToExport, FunctionsToExport and VariablesToExport
+    /// fields do not use wildcards and $null in their entries.
     /// </summary>
 #if !CORECLR
     [Export(typeof(IScriptRule))]
@@ -39,10 +39,10 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
         private const string functionsToExport = "FunctionsToExport";
         private const string cmdletsToExport = "CmdletsToExport";
         private const string aliasesToExport = "AliasesToExport";
-                   
+
         /// <summary>
-        /// AnalyzeScript: Analyzes the AST to check if AliasToExport, CmdletsToExport, FunctionsToExport 
-        /// and VariablesToExport fields do not use wildcards and $null in their entries. 
+        /// AnalyzeScript: Analyzes the AST to check if AliasToExport, CmdletsToExport, FunctionsToExport
+        /// and VariablesToExport fields do not use wildcards and $null in their entries.
         /// </summary>
         /// <param name="ast">The script's ast</param>
         /// <param name="fileName">The script's file name</param>
@@ -53,24 +53,40 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
             {
                 throw new ArgumentNullException(Strings.NullAstErrorMessage);
             }
-            
-            if (fileName == null || !Helper.IsModuleManifest(fileName))
+
+            if (fileName != null)
             {
-                yield break;
+                if (!Helper.IsModuleManifest(fileName))
+                {
+                    yield break;
+                }
+            }
+            else
+            {
+                if (!Helper.IsModuleManifestAst(ast))
+                {
+                    yield break;
+                }
+
+                // rewrite this rule to actually examine the psm1 or ps1 files
+                // that this psd1 refers to and then get the list of exports
+                // a stop gap measure would be to check for only null or empty
+                // export fields and suggest empty list instead for this particular
+                // case when ast is given but filename is null.
             }
 
             // check if valid module manifest
             IEnumerable<ErrorRecord> errorRecord = null;
-            PSModuleInfo psModuleInfo = Helper.Instance.GetModuleManifest(fileName, out errorRecord);            
+            PSModuleInfo psModuleInfo = Helper.Instance.GetModuleManifest(fileName, out errorRecord);
             if ((errorRecord != null && errorRecord.Count() > 0) || psModuleInfo == null)
-            {                
+            {
                 yield break;
             }
-            
+
             var hashtableAst = ast.Find(x => x is HashtableAst, false) as HashtableAst;
-            
+
             if (hashtableAst == null)
-            {                                
+            {
                 yield break;
             }
 
@@ -82,10 +98,10 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
                 if (!HasAcceptableExportField(field, hashtableAst, ast.Extent.Text, out extent) && extent != null)
                 {
                     yield return new DiagnosticRecord(
-                        GetError(field), 
-                        extent, 
-                        GetName(), 
-                        DiagnosticSeverity.Warning, 
+                        GetError(field),
+                        extent,
+                        GetName(),
+                        DiagnosticSeverity.Warning,
                         fileName,
                         suggestedCorrections: GetCorrectionExtent(field, extent, psModuleInfo));
                 }
@@ -93,8 +109,8 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
                 {
 
                 }
-            }                               
-                        
+            }
+
         }
 
         private string GetListLiteral<T>(Dictionary<string, T> exportedItemsDict)
@@ -134,7 +150,7 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
 
         private List<CorrectionExtent> GetCorrectionExtent(string field, IScriptExtent extent, PSModuleInfo psModuleInfo)
         {
-            Debug.Assert(field != null);            
+            Debug.Assert(field != null);
             Debug.Assert(psModuleInfo != null);
             Debug.Assert(extent != null);
             var corrections = new List<CorrectionExtent>();
@@ -169,7 +185,7 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
         }
 
         ///// <summary>
-        ///// Checks if the manifest file is valid. 
+        ///// Checks if the manifest file is valid.
         ///// </summary>
         ///// <param name="ast"></param>
         ///// <param name="fileName"></param>
@@ -204,7 +220,7 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
                     && varExprAst.VariablePath.IsUnqualified
                     && varExprAst.VariablePath.UserPath.Equals("null", StringComparison.OrdinalIgnoreCase);
         }
-                
+
         /// <summary>
         /// Checks if the *ToExport fields are explicitly set to arrays, eg. @(...), and the array entries do not contain any wildcard.
         /// </summary>
@@ -219,7 +235,7 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
             foreach (var pair in hast.KeyValuePairs)
             {
                 var keyStrConstAst = pair.Item1 as StringConstantExpressionAst;
-                if (keyStrConstAst != null && keyStrConstAst.Value.Equals(key, StringComparison.OrdinalIgnoreCase))                    
+                if (keyStrConstAst != null && keyStrConstAst.Value.Equals(key, StringComparison.OrdinalIgnoreCase))
                 {
                     // Checks for wildcard character in the entry.
                     var astWithWildcard = pair.Item2.Find(HasWildcardInExpression, false);
@@ -230,7 +246,7 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
                     }
                     else
                     {
-                        // Checks for $null in the entry.                           
+                        // Checks for $null in the entry.
                         var astWithNull = pair.Item2.Find(HasNullInExpression, false);
                         if (astWithNull != null)
                         {
@@ -245,9 +261,9 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
                 }
             }
             return true;
-        }       
+        }
 
-        
+
         /// <summary>
         /// Gets the error string of the rule.
         /// </summary>

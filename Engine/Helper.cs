@@ -1817,12 +1817,35 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer
             //using parsefile causes the parser to crash!
             string fileContent = File.ReadAllText(filepath);
             var ast = Parser.ParseInput(fileContent, out tokens, out errors);
-            var hast = ast.Find(x => x is HashtableAst, false) as HashtableAst;
-            if (hast == null)
+
+            if (ast == null)
             {
                 return false;
             }
-            var map = GetMapFromHashtableAst(hast);
+
+            return IsModuleManifestAst(ast, powershellVersion);
+        }
+
+        /// <summary>
+        /// Checks if a given hashtable corresponds to a valid PowerShell module manifest
+        /// </summary>
+        /// <param name="ast">ast to check for module manifest keys</param>
+        /// <param name="powershellVersion">Version parameter; valid if >= 3.0</param>
+        /// <returns>true if given ast corresponds to a module manifest ast, otherwise false</returns>
+        public static bool IsModuleManifestAst(Ast ast, Version powershellVersion = null)
+        {
+            if (ast == null)
+            {
+                throw new ArgumentNullException("hast");
+            }
+
+            var hashtableAst = ast.Find(x => x is HashtableAst, false) as HashtableAst;
+            if (hashtableAst == null)
+            {
+                return false;
+            }
+
+            var map = GetMapFromHashtableAst(hashtableAst);
             var deprecatedKeys = GetDeprecatedModuleManifestKeys();
             IEnumerable<string> allKeys;
             if (powershellVersion != null)
