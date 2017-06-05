@@ -942,7 +942,6 @@
   <data name="UseConsistentWhitespaceErrorSeparatorSemi" xml:space="preserve">
     <value>Use space after a semicolon.</value>
   </data>
-
   <data name="UseSupportsShouldProcessName" xml:space="preserve">
     <value>UseSupportsShouldProcess</value>
   </data>
@@ -966,5 +965,17 @@
   </data>
   <data name="AlignAssignmentStatementError" xml:space="preserve">
     <value>Assignment statements are not aligned</value>
+  </data>
+  <data name="UseCompatibleTypesName" xml:space="preserve">
+    <value>UseCompatibleTypes</value>
+  </data>
+  <data name="UseCompatibleTypesCommonName" xml:space="preserve">
+    <value>Use Compatible Types</value>
+  </data>
+  <data name="UseCompatibleTypesDescription" xml:space="preserve">
+    <value>Please use types that are available on this version of powershell</value>
+  </data>
+  <data name="UseCompatibleTypesError" xml:space="preserve">
+    <value>This type is not available on this version of powershell</value>
   </data>
 </root>
