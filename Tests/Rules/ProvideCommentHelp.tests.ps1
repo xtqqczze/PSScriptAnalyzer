@@ -10,6 +10,7 @@ $ruleSettings = @{
     Enable = $true
     ExportedOnly = $false
     BlockComment = $true
+    CheckScriptBlock = $false
     Placement = "before"
     VSCodeSnippetCorrection = $false
 }
@@ -47,6 +48,19 @@ function Test-Correction {
 }
 
 Describe "ProvideCommentHelp" {
+    Context "When a script has no comment help" {
+        It "Should find violations" {
+            $def = @'
+param($param1, $param2)
+Write-Output $param1
+Write-Output $param2
+'@
+            $ruleSettings.'CheckScriptBlock' = $true
+            $violations = Invoke-ScriptAnalyzer -ScriptDefinition $def -Settings $settings
+            $violations.Count | Should Be 1
+        }
+    }
+
     Context "When there are violations" {
         It "has 2 provide comment help violations" {
             $violations.Count | Should Be 2
