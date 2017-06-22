@@ -70,6 +70,9 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
         [ConfigurableRuleProperty(defaultValue: false)]
         public bool VSCodeSnippetCorrection { get; protected set; }
 
+        [ConfigurableRuleProperty(defaultValue: false)]
+        public bool CheckScriptBlock { get; protected set; }
+
         /// <summary>
         /// Represents the position of comment help with respect to the function definition.
         ///
@@ -108,6 +111,32 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
         public override IEnumerable<DiagnosticRecord> AnalyzeScript(Ast ast, string fileName)
         {
             if (ast == null) throw new ArgumentNullException(Strings.NullAstErrorMessage);
+
+            if (CheckScriptBlock)
+            {
+                // for script block ignore the placement
+                var scriptBlockAst = ast as ScriptBlockAst;
+                if (scriptBlockAst != null)
+                {
+                    var help = scriptBlockAst.GetHelpContent();
+                    // todo localize
+                    // todo update Extent
+                    // todo add corrections - replace the placement.begin and end in GetCorrectionPosition and GetCorrectionText with appropriate methods that handle script block and use those methods here to generate the correction
+                    if (help == null)
+                    {
+                        yield return new DiagnosticRecord(
+                            String.Format(
+                                CultureInfo.CurrentCulture,
+                               "Script does not have help"),
+                               scriptBlockAst.Extent,
+                               GetName(),
+                               GetDiagnosticSeverity(),
+                               fileName,
+                               null,
+                               null);
+                    }
+                }
+            }
 
             var exportedFunctions = Helper.Instance.GetExportedFunction(ast);
             var violationFinder = new ViolationFinder(exportedFunctions, ExportedOnly);
