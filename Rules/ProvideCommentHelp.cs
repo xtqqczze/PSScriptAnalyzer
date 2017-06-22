@@ -112,11 +112,12 @@ namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.BuiltinRules
         {
             if (ast == null) throw new ArgumentNullException(Strings.NullAstErrorMessage);
 
+            // todo reconsider having this switch. There doesn't seem to be any need for such a switch.
             if (CheckScriptBlock)
             {
                 // for script block ignore the placement
                 var scriptBlockAst = ast as ScriptBlockAst;
-                if (scriptBlockAst != null)
+                if (scriptBlockAst != null && scriptBlockAst.ParamBlock != null)
                 {
                     var help = scriptBlockAst.GetHelpContent();
                     // todo localize
